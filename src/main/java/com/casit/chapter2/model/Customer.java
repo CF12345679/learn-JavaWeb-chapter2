@@ -8,7 +8,7 @@ public class Customer {
     /**
      * 主键
      */
-    private String id;
+    private long id;
     /**
      * 姓名
      */
@@ -30,11 +30,11 @@ public class Customer {
      */
     private String remark;
 
-    public String getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(long id) {
         this.id = id;
     }
 
