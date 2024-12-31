@@ -1,6 +1,5 @@
 package com.casit.chapter2.helper;
 
-import com.casit.chapter2.service.CustomerService;
 import com.casit.chapter2.utils.CollectionUtil;
 import com.casit.chapter2.utils.PropsUtil;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -11,10 +10,16 @@ import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Created by 'A flying pig' 2024/12/30 14:05
@@ -56,7 +61,8 @@ public final class DatabaseHelper {
         if (conn == null) {
             try {
                 //通过数据源方式获取
-                 conn = DATA_SOURCE.getConnection();
+                //不需要手动销毁连接池中的对象。连接池会自动管理连接的生命周期，包括连接的创建、归还和销毁。
+                conn = DATA_SOURCE.getConnection();
             } catch (SQLException e) {
                 LOGGER.error("get connection failure", e);
                 throw new RuntimeException(e);
@@ -102,8 +108,6 @@ public final class DatabaseHelper {
         } catch (SQLException e) {
             LOGGER.error("query entity list failure", e);
             throw new RuntimeException(e);
-        } finally {
-            closeConnection();
         }
         return entityList;
     }
@@ -119,8 +123,6 @@ public final class DatabaseHelper {
         } catch (SQLException e) {
             LOGGER.error("query entity failure", e);
             throw new RuntimeException(e);
-        } finally {
-            closeConnection();
         }
         return entity;
     }
@@ -136,8 +138,6 @@ public final class DatabaseHelper {
         } catch (SQLException e) {
             LOGGER.error("execute query  failure", e);
             throw new RuntimeException(e);
-        } finally {
-            closeConnection();
         }
         return result;
     }
@@ -146,15 +146,13 @@ public final class DatabaseHelper {
      * 执行更新语句（包括update、insert、delete）
      */
     public static int executeUpdate(String sql, Object... params) {
-        int rows = 0;
+        int rows;
         try {
             Connection conn = getConnection();
             rows = QUERY_RUNNER.update(conn, sql, params);
         } catch (SQLException e) {
             LOGGER.error("execute update  failure", e);
             throw new RuntimeException(e);
-        } finally {
-            closeConnection();
         }
         return rows;
     }
@@ -214,6 +212,24 @@ public final class DatabaseHelper {
         }
         String sql = "DELETE FROM  " + getTableName(entityClass) + " WHERE id = ? ";
         return executeUpdate(sql, id) == 1;
+    }
+
+    /**
+     * 执行SQL文件
+     */
+    public static void executeSQLFile(String filename) {
+        String file = "mysql/customer_init.sql";
+        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(file);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        String sql;
+        try {
+            while ((sql = reader.readLine()) != null) {
+                DatabaseHelper.executeUpdate(sql);
+            }
+        } catch (IOException e) {
+            LOGGER.error("execute sql file failure", e);
+            throw new RuntimeException();
+        }
     }
 
 }

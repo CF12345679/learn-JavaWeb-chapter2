@@ -1,12 +1,13 @@
 package com.casit.chapter2.test;
 
+import com.casit.chapter2.helper.DatabaseHelper;
 import com.casit.chapter2.model.Customer;
 import com.casit.chapter2.service.CustomerService;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,13 +24,13 @@ public class CustomerServiceTest {
     }
 
     @Before
-    public void init(){
-        //TODO
+    public void init() throws IOException {
+        DatabaseHelper.executeSQLFile("mysql/customer_init.sql");
     }
     @Test
     public void getCustomerListTest(){
         List<Customer> customerList = customerService.getCustomerList();
-        Assert.assertEquals(2,customerList.size());
+        Assert.assertEquals(3,customerList.size());
     }
 
     @Test
@@ -44,6 +45,7 @@ public class CustomerServiceTest {
         fieldMap.put("name", "customer100");
         fieldMap.put("contact", "John");
         fieldMap.put("telephone", "13546895678");
+        fieldMap.put("email", "John@163.com");
         boolean result = customerService.createCustomer(fieldMap);
         Assert.assertTrue(result);
     }
@@ -57,7 +59,6 @@ public class CustomerServiceTest {
 
     @Test
     public void deleteCustomerTest(){
-
         boolean result = customerService.deleteCustomer(3);
         Assert.assertTrue(result);
     }
